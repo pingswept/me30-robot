@@ -1,6 +1,7 @@
 from flask import Flask
 app = Flask(__name__)
 
+import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BOARD)
 
@@ -78,16 +79,20 @@ def joystick():
     motor.send_command(*interpret_joystick_command(x, y))
     return "ok"
 
-import time
-GPIO.setup(12, GPIO.OUT)
-
-pin = GPIO.PWM(12, 500)  # channel=12; frequency=500Hz
-pin.start(0)            # initializes the duty cycle at 0; (0.0 <= duty cycle <= 100.0)
-
-while True:
-    pin.ChangeDutyCycle(25)  # changes the duty cycle to 25% (quarter power)
+@app.route('/test/pwm/<pin_name>')
+def test_pwm(pin_name):
+    pin = int(pin_name)
+    GPIO.setup(pin, GPIO.OUT)
+    motor = GPIO.PWM(pin, 500)  # frequency=500Hz
+    motor.start(0)            # initializes the duty cycle at 0; (0.0 <= duty cycle <= 100.0)
+    motor.ChangeDutyCycle(25)  # changes the duty cycle to 25% (quarter power)
     time.sleep(3)
-    pin.ChangeDutyCycle(50)  # changes the duty cycle to 50% (half power)
+    motor.ChangeDutyCycle(50)  # changes the duty cycle to 50% (half power)
     time.sleep(3)
-    pin.ChangeDutyCycle(100) # changes the duty cycle to 100% (full power)
+    motor.ChangeDutyCycle(100) # changes the duty cycle to 100% (full power)
+    time.sleep(3)
+    motor.ChangeDutyCycle(0)
+    return 'Tested pin {0}'.format(pin_name)
+
+
     time.sleep(3)
